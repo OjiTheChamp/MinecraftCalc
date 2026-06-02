@@ -1,403 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Minecraft Calculator</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --stone:    #7f7f7f;
-      --stone-l:  #999999;
-      --stone-d:  #555555;
-      --stone-dd: #2d2d2d;
-      --dirt:     #8B6914;
-      --grass:    #5D7C15;
-      --grass-l:  #73a01c;
-      --wood:     #c4893a;
-      --green-screen: #1a2a0a;
-      --pixel-green: #9FFF50;
-      --pixel-green-d: #4a7a1a;
-      --gold:     #FFEE00;
-      --diamond:  #4ff0f0;
-      --red-ore:  #c8342b;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0!important;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+body{display:flex;flex-direction:column;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; image-rendering: pixelated; }
+.display{flex:1;background:#000;display:flex;flex-direction:column;justify-content:flex-end;padding:0 18px 10px;overflow:hidden;}
+.hist{font-size:18px;color:#888;text-align:right;min-height:24px;word-break:break-all;}
+.num{font-size:clamp(18px,4.6vw,28px);font-weight:300;text-align:right;word-break:break-all;line-height:1.1;
+  background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
 
-    body {
-      font-family: 'VT323', monospace;
-      background-color: #87CEEB;
-      background-image:
-        /* clouds */
-        radial-gradient(ellipse 80px 30px at 15% 12%, rgba(255,255,255,0.9) 90%, transparent 100%),
-        radial-gradient(ellipse 50px 22px at 22% 10%, rgba(255,255,255,0.9) 90%, transparent 100%),
-        radial-gradient(ellipse 90px 32px at 60% 8%, rgba(255,255,255,0.85) 90%, transparent 100%),
-        radial-gradient(ellipse 55px 20px at 68% 6%, rgba(255,255,255,0.85) 90%, transparent 100%),
-        radial-gradient(ellipse 70px 25px at 85% 14%, rgba(255,255,255,0.8) 90%, transparent 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      padding-bottom: 0;
-      overflow: hidden;
-    }
+.pad{width:100%;max-width:640px;margin:0 auto;flex-shrink:0;padding:1px;background:#111;
+  display:flex;flex-direction:column;gap:7px;}                 /* 7px between sections */
+.block{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
 
-    /* pixel ground */
-    .ground {
-      width: 100%;
-      flex-shrink: 0;
-    }
-    .ground-grass {
-      height: 24px;
-      background: repeating-linear-gradient(
-        90deg,
-        var(--grass) 0px, var(--grass) 24px,
-        var(--grass-l) 24px, var(--grass-l) 48px
-      );
-      border-top: 4px solid #3a5e0a;
-    }
-    .ground-dirt {
-      height: 48px;
-      background: repeating-linear-gradient(
-        90deg,
-        #8B6914 0px, #8B6914 24px,
-        #7a5c10 24px, #7a5c10 48px
-      );
-      background-size: 48px 24px;
-      background-image:
-        repeating-linear-gradient(90deg, #8B6914 0 24px, #7a5c10 24px 48px),
-        repeating-linear-gradient(0deg,  #7a5c10 0 24px, #8B6914 24px 48px);
-    }
+button{
+  border:none;cursor:pointer;font-family:inherit;
+  font-size:clamp(11px,2.4vw,14px);font-weight:700;color:#000;
+  display:flex;align-items:center;justify-content:center;
+  height:44px;width:100%;white-space:nowrap;overflow:hidden;
+}
+button:active{filter:brightness(1.4);}
 
-    /* content above ground */
-    .scene {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-      justify-content: center;
-      padding: 1.5rem 1rem 0.5rem;
-      width: 100%;
-    }
+/* top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#000;flex-shrink:0;}
+.mind{font-size:14px;font-weight:700;color:#FF7F00;visibility:hidden;}
+.histbtn{width:auto;height:auto;padding:7px 14px;font-size:13px;color:#fff;background:#222;font-weight:700;}
 
-    .title {
-      color: var(--gold);
-      font-size: 2.2rem;
-      text-shadow: 3px 3px 0 #7a7000, 4px 4px 0 #000;
-      margin-bottom: 1rem;
-      letter-spacing: 3px;
-      text-align: center;
-    }
-
-    /* ── MAIN CALC SHELL (stone block style) ── */
-    .calc {
-      width: 270px;
-      display: flex;
-      flex-direction: column;
-      height: 380px;
-      /* outer bevel */
-      border: 4px solid var(--stone-dd);
-      border-top-color: var(--stone-l);
-      border-left-color: var(--stone-l);
-      border-radius: 2px;
-      box-shadow: 6px 6px 0 rgba(0,0,0,0.6);
-      /* stone bg pattern */
-      background-color: var(--stone);
-      background-image:
-        linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
-      background-size: 8px 8px;
-    }
-
-    /* ── DISPLAY (obsidian) ── */
-    .da {
-      background: var(--green-screen);
-      padding: 6px 10px 5px;
-      text-align: right;
-      flex-shrink: 0;
-      border-bottom: 3px solid #000;
-      border-top: 2px solid #0a1a04;
-      position: relative;
-    }
-    .da::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0,255,0,0.03) 0px, rgba(0,255,0,0.03) 2px,
-        transparent 2px, transparent 4px
-      );
-      pointer-events: none;
-    }
-    .dh { font-size: 11px; color: var(--pixel-green-d); min-height: 13px; letter-spacing: 1px; }
-    .dm { font-size: 1.6rem; color: var(--pixel-green); line-height: 1.1; word-break: break-all; text-shadow: 0 0 8px #4f9a00; letter-spacing: 1px; }
-
-    /* ── SCROLL BODY ── */
-    .sb {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 4px 0 4px;
-      background-color: var(--stone);
-      background-image:
-        linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px);
-      background-size: 8px 8px;
-    }
-    .sb::-webkit-scrollbar { width: 4px; }
-    .sb::-webkit-scrollbar-track { background: var(--stone-d); }
-    .sb::-webkit-scrollbar-thumb { background: var(--stone-dd); border-radius: 0; }
-
-    /* ── BUTTON GRID ── */
-    .grid { display: grid; gap: 3px; padding: 2px 5px; }
-
-    /* ── BUTTONS (pixel block style) ── */
-    .b {
-      font-family: 'VT323', monospace;
-      font-size: .82rem;
-      padding: 4px 2px;
-      cursor: pointer;
-      text-align: center;
-      user-select: none;
-      line-height: 1;
-      width: 100%;
-      border-radius: 0;
-      letter-spacing: 0.5px;
-      /* default: stone */
-      background-color: #6e6e6e;
-      color: #ffffff;
-      border: 2px solid #000;
-      border-top-color: #aaaaaa;
-      border-left-color: #aaaaaa;
-      border-right-color: #333;
-      border-bottom-color: #333;
-      text-shadow: 1px 1px 0 #000;
-      transition: filter 0.05s;
-    }
-    .b:hover { filter: brightness(1.15); }
-    .b:active {
-      border-top-color: #333;
-      border-left-color: #333;
-      border-right-color: #aaa;
-      border-bottom-color: #aaa;
-      transform: translate(1px,1px);
-    }
-
-    /* operator — wood planks */
-    .op {
-      background-color: var(--wood);
-      color: #fff8e0;
-      border-top-color: #e8a855;
-      border-left-color: #e8a855;
-      border-right-color: #7a4a10;
-      border-bottom-color: #7a4a10;
-    }
-
-    /* equals — emerald/green ore */
-    .eq {
-      background-color: #2d7a2d;
-      color: #b8ffb8;
-      border-top-color: #5abb5a;
-      border-left-color: #5abb5a;
-      border-right-color: #0f3f0f;
-      border-bottom-color: #0f3f0f;
-      text-shadow: 0 0 4px #00ff00;
-    }
-    .eq:active { background-color: #1f5a1f; }
-
-    /* AC — redstone/red ore */
-    .rd {
-      background-color: #8B1a1a;
-      color: #ffaaaa;
-      border-top-color: #dd4444;
-      border-left-color: #dd4444;
-      border-right-color: #440808;
-      border-bottom-color: #440808;
-      text-shadow: 0 0 4px #ff0000;
-    }
-
-    /* memory — lapis lazuli */
-    .mem {
-      background-color: #1a3a8a;
-      color: #aaccff;
-      border-top-color: #4477cc;
-      border-left-color: #4477cc;
-      border-right-color: #0a1a44;
-      border-bottom-color: #0a1a44;
-    }
-
-    /* scientific — purple (enchanting) */
-    .sci {
-      background-color: #4a1a7a;
-      color: #ddaaff;
-      border-top-color: #8844cc;
-      border-left-color: #8844cc;
-      border-right-color: #1a0840;
-      border-bottom-color: #1a0840;
-    }
-
-    /* DEG active — diamond */
-    .am {
-      background-color: #0e6e7e;
-      color: var(--diamond);
-      border-top-color: #44ccdd;
-      border-left-color: #44ccdd;
-      border-right-color: #042a34;
-      border-bottom-color: #042a34;
-      text-shadow: 0 0 6px #4ff0f0;
-    }
-
-    .minfo { padding: 1px 5px 3px; font-size: 9px; color: #ccc; text-shadow: 1px 1px 0 #000; }
-
-    footer {
-      margin-top: 0.6rem;
-      color: var(--gold);
-      font-size: 1rem;
-      text-shadow: 2px 2px 0 #000;
-      text-align: center;
-      letter-spacing: 1px;
-    }
-  </style>
+/* history panel */
+.panel{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;}
+.panel.open{display:flex;}
+.phead{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #222;flex-shrink:0;}
+.phead .ttl{font-size:22px;font-weight:700;
+  background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.phead button{width:auto;height:auto;font-size:14px;font-weight:700;padding:7px 13px;color:#fff;}
+.clearbtn{background:#333;margin-right:10px;}
+.closebtn{background:#FF0000;}
+.plist{flex:1;overflow-y:auto;padding:6px 0;}
+.empty{color:#666;text-align:center;padding:48px 16px;font-size:15px;}
+.hitem{padding:12px 18px;border-bottom:1px solid #161616;cursor:pointer;}
+.hitem:active{background:#111;}
+.hitem .he{font-size:15px;color:#888;word-break:break-all;text-align:right;}
+.hitem .hr{font-size:26px;font-weight:600;word-break:break-all;text-align:right;
+  background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+</style>
 </head>
 <body>
 
-<div class="scene">
-  <div class="title">⛏ CRAFTED CALC ⛏</div>
-
-  <div class="calc">
-    <div class="da">
-      <div class="dh" id="hist"></div>
-      <div class="dm" id="disp">0</div>
-    </div>
-    <div class="sb">
-
-      <!-- MEMORY -->
-      <div class="grid" style="grid-template-columns:repeat(6,1fr);">
-        <button class="b mem" onclick="mC()">MC</button>
-        <button class="b mem" onclick="mR()">MR</button>
-        <button class="b mem" onclick="mS()">MS</button>
-        <button class="b mem" onclick="mPlus()">M+</button>
-        <button class="b mem" onclick="mMinus()">M−</button>
-        <button class="b eq"  onclick="calc()">=</button>
-      </div>
-      <div class="minfo">M: <span id="mem-disp">0</span></div>
-
-      <!-- SCIENTIFIC -->
-      <div class="grid" style="grid-template-columns:repeat(5,1fr);">
-        <button class="b sci" onclick="sf('sin')">sin</button>
-        <button class="b sci" onclick="sf('cos')">cos</button>
-        <button class="b sci" onclick="sf('tan')">tan</button>
-        <button class="b sci" onclick="sf('asin')">sin⁻¹</button>
-        <button class="b sci" onclick="sf('acos')">cos⁻¹</button>
-        <button class="b sci" onclick="sf('atan')">tan⁻¹</button>
-        <button class="b sci" onclick="sf('log')">log</button>
-        <button class="b sci" onclick="sf('ln')">ln</button>
-        <button class="b sci" onclick="sf('log2')">log₂</button>
-        <button class="b sci" onclick="sf('sqrt')">√</button>
-        <button class="b sci" onclick="sf('cbrt')">∛</button>
-        <button class="b sci" onclick="sf('sq')">x²</button>
-        <button class="b sci" onclick="sf('cube')">x³</button>
-        <button class="b sci" onclick="sf('inv')">1/x</button>
-        <button class="b sci" onclick="sf('abs')">|x|</button>
-        <button class="b sci" onclick="sf('fact')">n!</button>
-        <button class="b sci" onclick="sf('pct')">%</button>
-        <button class="b sci" onclick="ac(Math.PI)">π</button>
-        <button class="b sci" onclick="ac(Math.E)">e</button>
-        <button class="b sci" onclick="ao('**')">xʸ</button>
-      </div>
-      <div class="grid" style="grid-template-columns:repeat(3,1fr);padding-bottom:3px;">
-        <button class="b sci am" id="btn-deg" onclick="setMode('deg')">DEG</button>
-        <button class="b sci"    id="btn-rad" onclick="setMode('rad')">RAD</button>
-        <button class="b eq"                  onclick="calc()">=</button>
-      </div>
-
-      <!-- CALCULATOR -->
-      <div class="grid" style="grid-template-columns:repeat(4,1fr);">
-        <button class="b rd" onclick="ca()">AC</button>
-        <button class="b"    onclick="ce()">CE</button>
-        <button class="b"    onclick="bs()">⌫</button>
-        <button class="b op" onclick="ao('/')">÷</button>
-        <button class="b"    onclick="an('7')">7</button>
-        <button class="b"    onclick="an('8')">8</button>
-        <button class="b"    onclick="an('9')">9</button>
-        <button class="b op" onclick="ao('*')">×</button>
-        <button class="b"    onclick="an('4')">4</button>
-        <button class="b"    onclick="an('5')">5</button>
-        <button class="b"    onclick="an('6')">6</button>
-        <button class="b op" onclick="ao('-')">−</button>
-        <button class="b"    onclick="an('1')">1</button>
-        <button class="b"    onclick="an('2')">2</button>
-        <button class="b"    onclick="an('3')">3</button>
-        <button class="b op" onclick="ao('+')">+</button>
-        <button class="b"    onclick="ts()">±</button>
-        <button class="b"    onclick="an('0')">0</button>
-        <button class="b"    onclick="ad()">.</button>
-        <button class="b eq" onclick="calc()">=</button>
-        <button class="b"    onclick="ach('(')">(</button>
-        <button class="b"    onclick="ach(')')">)</button>
-        <button class="b"    onclick="ao('%')">mod</button>
-        <button class="b eq" onclick="calc()">=</button>
-      </div>
-
-    </div>
-  </div>
-
-  <footer>Made by oji the champ &nbsp;|&nbsp; Crafted with redstone &amp; math</footer>
+<div class="topbar">
+  <div class="mind" id="mind">M</div>
+  <button class="histbtn" onclick="openHistory()">🕘 History</button>
 </div>
 
-<div class="ground">
-  <div class="ground-grass"></div>
-  <div class="ground-dirt"></div>
+<div class="display">
+  <div class="hist" id="hist"></div>
+  <div class="num" id="num">0</div>
+</div>
+
+<div class="pad" id="pad"></div>
+
+<div class="panel" id="panel">
+  <div class="phead">
+    <span class="ttl">History</span>
+    <span>
+      <button class="clearbtn" onclick="clearHistory()">Clear</button>
+      <button class="closebtn" onclick="closeHistory()">Close</button>
+    </span>
+  </div>
+  <div class="plist" id="plist"></div>
 </div>
 
 <script>
-let expr='',mem=0,deg=true,fresh=false;
-const disp=document.getElementById('disp'),hist=document.getElementById('hist'),memD=document.getElementById('mem-disp');
-function ud(v){disp.textContent=v;}
-function um(){memD.textContent=fmt(mem);}
-function an(n){if(fresh){expr='';fresh=false;}expr=(expr==='0')?n:expr+n;ud(expr);}
-function ad(){if(fresh){expr='0';fresh=false;}const p=expr.split(/[\+\-\*\/\%\(]/);if(p[p.length-1].includes('.'))return;if(!p[p.length-1])expr+='0';expr+='.';ud(expr);}
-function ao(op){fresh=false;if(expr===''&&op==='-'){expr='-';ud(expr);return;}if(!expr)return;expr+=op;ud(expr);}
-function ach(c){fresh=false;expr+=c;ud(expr);}
-function ac(v){fresh=false;expr+=String(v);ud(expr);}
-function se(e){e=e.replace(/\u00d7/g,'*').replace(/\u00f7/g,'/').replace(/\u2212/g,'-');return Function('"use strict";return('+e+')')();}
-function toR(v){return deg?v*Math.PI/180:v;}
-function frR(v){return deg?v*180/Math.PI:v;}
-function fact(n){n=Math.floor(Math.abs(n));if(n>170)return Infinity;let r=1;for(let i=2;i<=n;i++)r*=i;return r;}
-function sf(fn){
-  let v;try{v=se(expr||'0');}catch{v=0;}let r;
-  switch(fn){
-    case'sin':r=Math.sin(toR(v));break;case'cos':r=Math.cos(toR(v));break;case'tan':r=Math.tan(toR(v));break;
-    case'asin':r=frR(Math.asin(v));break;case'acos':r=frR(Math.acos(v));break;case'atan':r=frR(Math.atan(v));break;
-    case'log':r=Math.log10(v);break;case'ln':r=Math.log(v);break;case'log2':r=Math.log2(v);break;
-    case'sqrt':r=Math.sqrt(v);break;case'cbrt':r=Math.cbrt(v);break;
-    case'sq':r=v*v;break;case'cube':r=v*v*v;break;case'inv':r=1/v;break;
-    case'abs':r=Math.abs(v);break;case'fact':r=fact(v);break;case'pct':r=v/100;break;
-  }
-  hist.textContent=fn+'('+fmt(v)+') =';expr=String(r);fresh=true;ud(fmt(r));
+/* ---------- rainbow (ROYGBIV order) ---------- */
+const STOPS=['#FF0000','#FF7F00','#FFD500','#00C000','#0066FF','#4B0082','#8B00FF'];
+
+/* ---------- state ---------- */
+let tokens=[];          // each: {raw, disp}
+let radians=false;      // false = DEG, true = RAD
+let justEvaled=false;
+let mem=0;
+let history=[];         // {expr, result}, newest first
+let repeatOp=null;      // last operation to repeat when = is pressed again
+
+/* ---------- layout: 7 columns, every row red -> violet ---------- */
+// action: ['t',raw,disp] | 'ac' | 'bs' | 'eq' | 'deg' | 'pm' | 'mc' | 'mr' | 'mplus' | 'mminus' | 'ms'
+const SECTIONS=[
+  // --- Memory ---
+  [
+    [['MC','mc'],['MR','mr'],['M+','mplus'],['M-','mminus'],['MS','ms'],['AC','ac'],['DEL','bs']]
+  ],
+  // --- Scientific ---
+  [
+    [['sin',['t','sin(','sin(']],['cos',['t','cos(','cos(']],['tan',['t','tan(','tan(']],['sin⁻¹',['t','asin(','sin⁻¹(']],['cos⁻¹',['t','acos(','cos⁻¹(']],['tan⁻¹',['t','atan(','tan⁻¹(']],['DEG','deg']],
+    [['log',['t','log10(','log(']],['ln',['t','ln(','ln(']],['log₂',['t','log2(','log₂(']],['eˣ',['t','exp(','exp(']],['x²',['t','**2','²']],['x³',['t','**3','³']],['xʸ',['t','**','^']]],
+    [['√',['t','sqrt(','√(']],['∛',['t','cbrt(','∛(']],['1/x',['t','inv(','1/(']],['|x|',['t','abs(','abs(']],['n!',['t','fact(','fact(']],['π',['t','PI','π']],['e',['t','E','e']]],
+    [['(',['t','(','(']],[')',['t',')',')']],['±','pm'],['%',['t','%','%']],['mod',['t','%','mod']],['÷',['t','/','÷']],['×',['t','*','×']]]
+  ],
+  // --- Basic ---
+  [
+    [['1',['t','1','1']],['2',['t','2','2']],['3',['t','3','3']],['4',['t','4','4']],['5',['t','5','5']],['6',['t','6','6']],['+',['t','+','+']]],
+    [['7',['t','7','7']],['8',['t','8','8']],['9',['t','9','9']],['0',['t','0','0']],['.',['t','.','.']],['−',['t','-','−']],['=','eq']]
+  ]
+];
+
+/* ---------- render ---------- */
+function makeBtn(def,color){
+  const [label,act]=def;
+  const b=document.createElement('button');
+  b.textContent=(act==='deg')?(radians?'RAD':'DEG'):label;
+  b.style.background=color;
+  b.onclick=()=>handle(act);
+  return b;
 }
-function fmt(n){if(typeof n!=='number'||isNaN(n))return'Error';if(!isFinite(n))return n>0?'Infinity':'-Infinity';if(Math.abs(n)>=1e14||(Math.abs(n)<1e-7&&n!==0))return n.toExponential(6);return parseFloat(n.toPrecision(12)).toString();}
-function calc(){if(!expr)return;try{let r=se(expr);hist.textContent=expr+' =';expr=String(r);fresh=true;ud(fmt(r));}catch{hist.textContent=expr;ud('Error');expr='';}}
-function ca(){expr='';fresh=false;hist.textContent='';ud('0');}
-function ce(){expr='';fresh=false;ud('0');}
-function bs(){if(fresh){ca();return;}expr=expr.slice(0,-1);ud(expr||'0');}
-function ts(){if(!expr||expr==='0')return;expr=expr.startsWith('-')?expr.slice(1):'-'+expr;ud(expr);}
-function setMode(m){deg=(m==='deg');document.getElementById('btn-deg').className='b sci'+(deg?' am':'');document.getElementById('btn-rad').className='b sci'+(deg?'':' am');}
-function mC(){mem=0;um();}
-function mR(){expr=String(mem);fresh=false;ud(fmt(mem));}
-function mS(){try{mem=se(expr||'0');}catch{mem=0;}um();}
-function mPlus(){try{mem+=se(expr||'0');}catch{}um();}
-function mMinus(){try{mem-=se(expr||'0');}catch{}um();}
+function render(){
+  const pad=document.getElementById('pad');
+  pad.innerHTML='';
+  SECTIONS.forEach(section=>{
+    const block=document.createElement('div');
+    block.className='block';
+    section.forEach(row=>{
+      row.forEach((def,col)=>{
+        block.appendChild(makeBtn(def,STOPS[col%7]));   // col 0 = red ... col 6 = violet
+      });
+    });
+    pad.appendChild(block);
+  });
+}
+
+/* ---------- helpers ---------- */
+function trimNum(n){return String(Math.round((n+Number.EPSILON)*1e10)/1e10);}
+
+function evalRaw(raw){
+  const dFactor = radians ? '1' : '(Math.PI/180)';
+  const body=`
+    "use strict";
+    const PI=Math.PI, E=Math.E, _d=${dFactor};
+    const sin=x=>Math.sin(x*_d), cos=x=>Math.cos(x*_d), tan=x=>Math.tan(x*_d);
+    const asin=x=>Math.asin(x)/_d, acos=x=>Math.acos(x)/_d, atan=x=>Math.atan(x)/_d;
+    const log10=x=>Math.log10(x), log2=x=>Math.log2(x), ln=x=>Math.log(x);
+    const sqrt=x=>Math.sqrt(x), cbrt=x=>Math.cbrt(x), abs=x=>Math.abs(x), exp=x=>Math.exp(x), inv=x=>1/x;
+    const fact=x=>{x=Math.round(x); if(x<0||!isFinite(x))return NaN; let r=1; for(let i=2;i<=x;i++)r*=i; return r;};
+    return (${raw});
+  `;
+  return Function(body)();
+}
+function closeParens(raw){
+  const open=(raw.match(/\(/g)||[]).length, close=(raw.match(/\)/g)||[]).length;
+  return raw + ')'.repeat(Math.max(0,open-close));
+}
+function currentValue(){
+  if(!tokens.length)return 0;
+  try{
+    const v=evalRaw(closeParens(tokens.map(t=>t.raw).join('')));
+    return (typeof v==='number'&&isFinite(v))?v:null;
+  }catch(e){return null;}
+}
+
+/* ---------- input handling ---------- */
+function handle(act){
+  if(act==='ac'){tokens=[];justEvaled=false;repeatOp=null;setHist('');}
+  else if(act==='bs'){tokens.pop();justEvaled=false;}
+  else if(act==='deg'){radians=!radians;render();}
+  else if(act==='eq'){evaluate();}
+  else if(act==='pm'){const v=currentValue();if(v!=null){const s=trimNum(-v);tokens=[{raw:s,disp:s}];justEvaled=false;}}
+  else if(act==='mc'){mem=0;setHist('');}
+  else if(act==='mr'){pushToken(trimNum(mem),trimNum(mem));}
+  else if(act==='ms'){const v=currentValue();if(v!=null){mem=v;setHist('M = '+trimNum(mem));justEvaled=true;}}
+  else if(act==='mplus'){const v=currentValue();if(v!=null){mem+=v;setHist('M = '+trimNum(mem));justEvaled=true;}}
+  else if(act==='mminus'){const v=currentValue();if(v!=null){mem-=v;setHist('M = '+trimNum(mem));justEvaled=true;}}
+  else if(Array.isArray(act)&&act[0]==='t'){pushToken(act[1],act[2]);}
+  draw();
+  updateMind();
+}
+function pushToken(raw,disp){
+  if(justEvaled){
+    const isOp=/^[*/+\-%]$|^\*\*/.test(raw);   // operator continues the result; anything else starts fresh
+    if(!isOp)tokens=[];
+    justEvaled=false;
+  }
+  tokens.push({raw,disp});
+}
+function setHist(t){document.getElementById('hist').textContent=t;}
+function draw(){
+  const disp=tokens.map(t=>t.disp).join('');
+  document.getElementById('num').textContent=disp||'0';
+}
+
+/* ---------- memory indicator + history viewer ---------- */
+function updateMind(){
+  const el=document.getElementById('mind');
+  el.textContent='M '+(mem?trimNum(mem):'');
+  el.style.visibility = (mem!==0) ? 'visible' : 'hidden';
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderHistory(){
+  const list=document.getElementById('plist');
+  list.innerHTML='';
+  if(!history.length){list.innerHTML='<div class="empty">No calculations yet</div>';return;}
+  history.forEach(h=>{
+    const it=document.createElement('div');
+    it.className='hitem';
+    it.innerHTML='<div class="he">'+escapeHtml(h.expr)+' =</div><div class="hr">'+escapeHtml(h.result)+'</div>';
+    it.onclick=()=>loadHistory(h.result);
+    list.appendChild(it);
+  });
+}
+function openHistory(){renderHistory();document.getElementById('panel').classList.add('open');}
+function closeHistory(){document.getElementById('panel').classList.remove('open');}
+function clearHistory(){history=[];renderHistory();}
+function loadHistory(s){tokens=[{raw:s,disp:s}];justEvaled=true;draw();closeHistory();}
+
+/* ---------- repeat-on-equals ---------- */
+function isBinaryOp(r,i){
+  if(r==='*'||r==='/'||r==='%'||r==='**')return true;
+  if(r==='+'||r==='-'){                          // tell apart binary minus from a leading sign
+    if(i===0)return false;
+    const p=tokens[i-1].raw;
+    if(p==='('||['*','/','+','-','%','**'].includes(p))return false;
+    return true;
+  }
+  return false;
+}
+function captureRepeat(){
+  // find the last top-level operator + the operand after it, e.g. "×(3)" in 1×(3)
+  let depth=0,opIdx=-1;
+  for(let i=0;i<tokens.length;i++){
+    const r=tokens[i].raw;
+    if(r==='(')depth++;
+    else if(r===')')depth--;
+    else if(depth===0&&isBinaryOp(r,i))opIdx=i;
+  }
+  if(opIdx>=0&&opIdx<tokens.length-1){
+    repeatOp={opRaw:tokens[opIdx].raw,opDisp:tokens[opIdx].disp,
+      operandTokens:tokens.slice(opIdx+1).map(t=>({raw:t.raw,disp:t.disp}))};
+  }else{
+    repeatOp=null;                               // nothing repeatable (e.g. a lone number)
+  }
+}
+
+/* ---------- evaluate ---------- */
+function evaluate(){
+  if(!tokens.length)return;
+  if(justEvaled&&repeatOp){
+    // = pressed again -> repeat the last operation on the current result
+    const cur={raw:tokens[0].raw,disp:tokens[0].disp};
+    tokens=[cur,{raw:repeatOp.opRaw,disp:repeatOp.opDisp},
+      ...repeatOp.operandTokens.map(t=>({raw:t.raw,disp:t.disp}))];
+  }else{
+    captureRepeat();                             // remember this op for future = presses
+  }
+  const exprStr=tokens.map(t=>t.disp).join('');
+  const raw=closeParens(tokens.map(t=>t.raw).join(''));
+  let result;
+  try{
+    result=evalRaw(raw);
+    if(result===undefined||result===null||Number.isNaN(result))result='Error';
+    else if(!isFinite(result))result='∞';
+    else result=Math.round((result+Number.EPSILON)*1e10)/1e10;
+  }catch(e){result='Error';}
+  setHist(exprStr+' =');
+  if(result==='Error'||result==='∞'){
+    document.getElementById('num').textContent=result;
+    tokens=[];justEvaled=false;repeatOp=null;
+  }else{
+    const s=String(result);
+    document.getElementById('num').textContent=s;
+    tokens=[{raw:s,disp:s}];
+    justEvaled=true;
+    history.unshift({expr:exprStr,result:s});   // newest first
+  }
+}
+
+/* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{
-  if(e.key>='0'&&e.key<='9')an(e.key);
-  else if(e.key==='.')ad();else if(e.key==='+')ao('+');else if(e.key==='-')ao('-');
-  else if(e.key==='*')ao('*');else if(e.key==='/'){e.preventDefault();ao('/');}
-  else if(e.key==='%')ao('%');else if(e.key==='(')ach('(');else if(e.key===')')ach(')');
-  else if(e.key==='Enter'||e.key==='=')calc();else if(e.key==='Backspace')bs();else if(e.key==='Escape')ca();
+  if(document.getElementById('panel').classList.contains('open')){
+    if(e.key==='Escape')closeHistory();
+    return;                       // ignore calc keys while history is open
+  }
+  const k=e.key;
+  if(/[0-9.]/.test(k))handle(['t',k,k]);
+  else if(k==='+')handle(['t','+','+']);
+  else if(k==='-')handle(['t','-','−']);
+  else if(k==='*')handle(['t','*','×']);
+  else if(k==='/'){e.preventDefault();handle(['t','/','÷']);}
+  else if(k==='(')handle(['t','(','(']);
+  else if(k===')')handle(['t',')',')']);
+  else if(k==='%')handle(['t','%','%']);
+  else if(k==='Enter'||k==='='){e.preventDefault();handle('eq');}
+  else if(k==='Backspace')handle('bs');
+  else if(k==='Escape')handle('ac');
 });
+
+/* ---------- init ---------- */
+render();
+draw();
+updateMind();
 </script>
 </body>
 </html>
