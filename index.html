@@ -5,9 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Calculator</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;border-radius:0!important;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0!important;-webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input{-webkit-user-select:text;user-select:text;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;}
 body{display:flex;flex-direction:column;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#000;flex-shrink:0;}
+.mind{font-size:14px;font-weight:700;color:#FF7F00;visibility:hidden;}
+.histbtn{padding:7px 11px;font-size:12px;color:#fff;background:#222;font-weight:700;border:none;cursor:pointer;font-family:inherit;}
+.histbtn.on{background:#fff;color:#000;}
+.histbtn:active{filter:brightness(1.4);}
 
 .display{flex:1;background:#000;display:flex;flex-direction:column;justify-content:flex-end;padding:0 18px 10px;overflow:hidden;}
 .hist{font-size:18px;color:#888;text-align:right;min-height:24px;word-break:break-all;}
@@ -16,21 +24,15 @@ body{display:flex;flex-direction:column;font-family:'Segoe UI',Tahoma,Geneva,Ver
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
 
 .pad{width:100%;max-width:640px;margin:0 auto;flex-shrink:0;padding:1px;background:#111;
-  display:flex;flex-direction:column;gap:7px;}                 /* 7px between sections */
+  display:flex;flex-direction:column;gap:7px;}
 .block{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
-
-button{
-  border:none;cursor:pointer;font-family:inherit;
-  font-size:clamp(11px,2.4vw,14px);font-weight:700;color:#000;
-  display:flex;align-items:center;justify-content:center;
-  height:44px;width:100%;white-space:nowrap;overflow:hidden;
-}
+button{border:none;cursor:pointer;font-family:inherit;font-size:clamp(11px,2.4vw,14px);font-weight:700;color:#000;
+  display:flex;align-items:center;justify-content:center;height:44px;width:100%;white-space:nowrap;overflow:hidden;}
 button:active{filter:brightness(1.4);}
-
-/* top bar */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#000;flex-shrink:0;}
-.mind{font-size:14px;font-weight:700;color:#FF7F00;visibility:hidden;}
-.histbtn{width:auto;height:auto;padding:7px 14px;font-size:13px;color:#fff;background:#222;font-weight:700;}
+.mathsym{font-family:'Times New Roman',Georgia,'Cambria Math',serif;font-style:italic;font-size:clamp(15px,3.1vw,19px);}
+.dispmath{font-family:'Times New Roman',Georgia,'Cambria Math',serif;font-style:italic;}
+.num .dispmath{background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
 
 /* history panel */
 .panel{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;}
@@ -39,24 +41,49 @@ button:active{filter:brightness(1.4);}
 .phead .ttl{font-size:22px;font-weight:700;
   background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
-.phead button{width:auto;height:auto;font-size:14px;font-weight:700;padding:7px 13px;color:#fff;}
+.phead button{height:auto;font-size:14px;font-weight:700;padding:7px 13px;color:#fff;width:auto;}
 .clearbtn{background:#333;margin-right:10px;}
 .closebtn{background:#FF0000;}
-.plist{flex:1;overflow-y:auto;padding:6px 0;}
+.plist{flex:1;overflow-y:auto;padding:6px 0;touch-action:pan-y;}
 .empty{color:#666;text-align:center;padding:48px 16px;font-size:15px;}
 .hitem{padding:12px 18px;border-bottom:1px solid #161616;cursor:pointer;}
 .hitem:active{background:#111;}
 .hitem .he{font-size:15px;color:#888;word-break:break-all;text-align:right;}
-.hitem .hr{font-size:26px;font-weight:600;word-break:break-all;text-align:right;
+.hitem .hr{font-size:24px;font-weight:600;word-break:break-all;text-align:right;
   background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+
+/* converter */
+.topbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.convbody{flex:1;overflow-y:auto;padding:16px;touch-action:pan-y;display:flex;flex-direction:column;gap:14px;}
+.cats{display:flex;flex-wrap:wrap;gap:6px;}
+.cat{padding:8px 12px;font-size:13px;font-weight:700;color:#000;border:none;cursor:pointer;font-family:inherit;width:auto;height:auto;opacity:1;}
+.cat:not(.on){opacity:.82;}
+.cat.on{opacity:1;outline:2px solid #fff;outline-offset:-2px;}
+.clabel{font-size:13px;color:#888;margin-bottom:-8px;}
+.cval{width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;font-family:inherit;font-size:26px;padding:12px;text-align:right;}
+.crow{display:flex;gap:8px;align-items:stretch;}
+.crow select{flex:1;min-width:0;background:#1a1a1a;border:1px solid #333;color:#fff;font-family:inherit;font-size:16px;padding:12px;}
+.swap{background:#333;color:#fff;border:none;cursor:pointer;font-family:inherit;font-size:20px;padding:0 16px;width:auto;height:auto;}
+.cresult{font-size:clamp(26px,8vw,40px);font-weight:600;text-align:right;word-break:break-all;
+  background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#4B0082,#8B00FF);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.csave{margin-top:6px;padding:13px;font-size:16px;font-weight:700;color:#000;border:none;cursor:pointer;font-family:inherit;width:100%;height:auto;
+  background:linear-gradient(90deg,#FF0000,#FF7F00,#FFD500,#00C000,#0066FF,#8B00FF);}
+.csave:active{filter:brightness(1.2);}
+.cnote{font-size:12px;color:#888;text-align:right;margin-top:-6px;}
+#convhistpanel{z-index:25;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="mind" id="mind">M</div>
-  <button class="histbtn" onclick="openHistory()">🕘 History</button>
+  <div class="topbtns">
+    <button class="histbtn on" id="calcbtn" onclick="toggleSci()">Calculus</button>
+    <button class="histbtn" onclick="openConvert()">⇄ Convert</button>
+    <button class="histbtn" onclick="openHistory()">🕘 History</button>
+  </div>
 </div>
 
 <div class="display">
@@ -77,44 +104,77 @@ button:active{filter:brightness(1.4);}
   <div class="plist" id="plist"></div>
 </div>
 
-<script>
-/* ---------- rainbow (ROYGBIV order) ---------- */
-const STOPS=['#FF0000','#FF7F00','#FFD500','#00C000','#0066FF','#4B0082','#8B00FF'];
+<div class="panel" id="convpanel">
+  <div class="phead">
+    <span class="ttl">Converter</span>
+    <span>
+      <button class="clearbtn" onclick="openConvHistory()">History</button>
+      <button class="closebtn" onclick="closeConvert()">Close</button>
+    </span>
+  </div>
+  <div class="convbody">
+    <div class="cats" id="cats"></div>
+    <div class="clabel">Value</div>
+    <input class="cval" id="cval" type="number" inputmode="decimal" value="1"/>
+    <div class="crow">
+      <select id="cfrom"></select>
+      <button class="swap" onclick="swapUnits()">⇄</button>
+      <select id="cto"></select>
+    </div>
+    <div class="cresult" id="cresult">—</div>
+    <div class="cnote" id="cnote"></div>
+    <button class="csave" onclick="saveConv()">Save to History</button>
+  </div>
+</div>
 
-/* ---------- state ---------- */
-let tokens=[];          // each: {raw, disp}
-let radians=false;      // false = DEG, true = RAD
+<div class="panel" id="convhistpanel">
+  <div class="phead">
+    <span class="ttl">Convert History</span>
+    <span>
+      <button class="clearbtn" onclick="clearConvHistory()">Clear</button>
+      <button class="closebtn" onclick="closeConvHistory()">Close</button>
+    </span>
+  </div>
+  <div class="plist" id="convplist"></div>
+</div>
+
+<script>
+/* rainbow (ROYGBIV) */
+const STOPS=['#FF0000','#FF9100','#FFE500','#00E512','#1E8CFF','#FFFFFF','#A020FF'];
+
+/* state */
+let tokens=[];          // {raw, disp}
+let radians=false;      // false = DEG
 let justEvaled=false;
 let mem=0;
 let history=[];         // {expr, result}, newest first
-let repeatOp=null;      // last operation to repeat when = is pressed again
+let repeatOp=null;      // last operation, for repeat-on-equals
+let showSci=true;       // Calculus (scientific) section visible
 
-/* ---------- layout: 7 columns, every row red -> violet ---------- */
-// action: ['t',raw,disp] | 'ac' | 'bs' | 'eq' | 'deg' | 'pm' | 'mc' | 'mr' | 'mplus' | 'mminus' | 'ms'
+/* layout: 7 columns, three sections (Memory / Scientific / Basic) */
 const SECTIONS=[
-  // --- Memory ---
   [
     [['MC','mc'],['MR','mr'],['M+','mplus'],['M-','mminus'],['MS','ms'],['AC','ac'],['DEL','bs']]
   ],
-  // --- Scientific ---
   [
     [['sin',['t','sin(','sin(']],['cos',['t','cos(','cos(']],['tan',['t','tan(','tan(']],['sin⁻¹',['t','asin(','sin⁻¹(']],['cos⁻¹',['t','acos(','cos⁻¹(']],['tan⁻¹',['t','atan(','tan⁻¹(']],['DEG','deg']],
     [['log',['t','log10(','log(']],['ln',['t','ln(','ln(']],['log₂',['t','log2(','log₂(']],['eˣ',['t','exp(','exp(']],['x²',['t','**2','²']],['x³',['t','**3','³']],['xʸ',['t','**','^']]],
-    [['√',['t','sqrt(','√(']],['∛',['t','cbrt(','∛(']],['1/x',['t','inv(','1/(']],['|x|',['t','abs(','abs(']],['n!',['t','fact(','fact(']],['π',['t','PI','π']],['e',['t','E','e']]],
-    [['(',['t','(','(']],[')',['t',')',')']],['±','pm'],['%',['t','%','%']],['mod',['t','%','mod']],['÷',['t','/','÷']],['×',['t','*','×']]]
+    [['√',['t','sqrt(','√(']],['∛',['t','cbrt(','∛(']],['1/x',['t','inv(','1/(']],['|x|',['t','abs(','abs(']],['n!',['t','fact(','fact(']],['π',['t','PI','π']],['e',['t','E','e']]]
   ],
-  // --- Basic ---
   [
+    [['(',['t','(','(']],[')',['t',')',')']],['±','pm'],['%',['t','%','%']],['mod',['t','%','mod']],['÷',['t','/','÷']],['×',['t','*','×']]],
     [['1',['t','1','1']],['2',['t','2','2']],['3',['t','3','3']],['4',['t','4','4']],['5',['t','5','5']],['6',['t','6','6']],['+',['t','+','+']]],
     [['7',['t','7','7']],['8',['t','8','8']],['9',['t','9','9']],['0',['t','0','0']],['.',['t','.','.']],['−',['t','-','−']],['=','eq']]
   ]
 ];
 
-/* ---------- render ---------- */
+/* render */
+const ITALIC=new Set(['π','e','eˣ','x²','x³','xʸ','1/x','|x|','n!']);   // math constants/variables -> serif italic
 function makeBtn(def,color){
   const [label,act]=def;
   const b=document.createElement('button');
   b.textContent=(act==='deg')?(radians?'RAD':'DEG'):label;
+  if(ITALIC.has(label))b.classList.add('mathsym');
   b.style.background=color;
   b.onclick=()=>handle(act);
   return b;
@@ -122,26 +182,27 @@ function makeBtn(def,color){
 function render(){
   const pad=document.getElementById('pad');
   pad.innerHTML='';
-  SECTIONS.forEach(section=>{
+  SECTIONS.forEach((section,idx)=>{
+    if(idx===1 && !showSci)return;          // Scientific (Calculus) section toggled off
     const block=document.createElement('div');
     block.className='block';
-    section.forEach(row=>{
-      row.forEach((def,col)=>{
-        block.appendChild(makeBtn(def,STOPS[col%7]));   // col 0 = red ... col 6 = violet
-      });
-    });
+    section.forEach(row=>row.forEach((def,col)=>block.appendChild(makeBtn(def,STOPS[col%7]))));
     pad.appendChild(block);
   });
 }
+function toggleSci(){
+  showSci=!showSci;
+  document.getElementById('calcbtn').classList.toggle('on',showSci);
+  render();
+}
 
-/* ---------- helpers ---------- */
+/* helpers */
 function trimNum(n){return String(Math.round((n+Number.EPSILON)*1e10)/1e10);}
-
 function evalRaw(raw){
-  const dFactor = radians ? '1' : '(Math.PI/180)';
+  const dF = radians ? '1' : '(Math.PI/180)';
   const body=`
     "use strict";
-    const PI=Math.PI, E=Math.E, _d=${dFactor};
+    const PI=Math.PI, E=Math.E, _d=${dF};
     const sin=x=>Math.sin(x*_d), cos=x=>Math.cos(x*_d), tan=x=>Math.tan(x*_d);
     const asin=x=>Math.asin(x)/_d, acos=x=>Math.acos(x)/_d, atan=x=>Math.atan(x)/_d;
     const log10=x=>Math.log10(x), log2=x=>Math.log2(x), ln=x=>Math.log(x);
@@ -157,18 +218,16 @@ function closeParens(raw){
 }
 function currentValue(){
   if(!tokens.length)return 0;
-  try{
-    const v=evalRaw(closeParens(tokens.map(t=>t.raw).join('')));
-    return (typeof v==='number'&&isFinite(v))?v:null;
-  }catch(e){return null;}
+  try{const v=evalRaw(closeParens(tokens.map(t=>t.raw).join(''))); return (typeof v==='number'&&isFinite(v))?v:null;}
+  catch(e){return null;}
 }
 
-/* ---------- input handling ---------- */
+/* input */
 function handle(act){
   if(act==='ac'){tokens=[];justEvaled=false;repeatOp=null;setHist('');}
   else if(act==='bs'){tokens.pop();justEvaled=false;}
   else if(act==='deg'){radians=!radians;render();}
-  else if(act==='eq'){evaluate();}
+  else if(act==='eq'){evaluate();updateMind();return;}   // evaluate sets its own display; don't let draw() overwrite it
   else if(act==='pm'){const v=currentValue();if(v!=null){const s=trimNum(-v);tokens=[{raw:s,disp:s}];justEvaled=false;}}
   else if(act==='mc'){mem=0;setHist('');}
   else if(act==='mr'){pushToken(trimNum(mem),trimNum(mem));}
@@ -181,23 +240,24 @@ function handle(act){
 }
 function pushToken(raw,disp){
   if(justEvaled){
-    const isOp=/^[*/+\-%]$|^\*\*/.test(raw);   // operator continues the result; anything else starts fresh
+    const isOp=/^[*/+\-%]$|^\*\*/.test(raw);   // operator continues result; else start fresh
     if(!isOp)tokens=[];
     justEvaled=false;
   }
   tokens.push({raw,disp});
 }
-function setHist(t){document.getElementById('hist').textContent=t;}
+function setHist(t){document.getElementById('hist').innerHTML=wrapMath(t);}
+function wrapMath(s){return escapeHtml(s).replace(/π/g,'<span class="dispmath">π</span>');}
 function draw(){
-  const disp=tokens.map(t=>t.disp).join('');
-  document.getElementById('num').textContent=disp||'0';
+  const s=tokens.map(t=>t.disp).join('');
+  document.getElementById('num').innerHTML = s ? wrapMath(s) : '0';
 }
 
-/* ---------- memory indicator + history viewer ---------- */
+/* memory indicator + history viewer */
 function updateMind(){
   const el=document.getElementById('mind');
   el.textContent='M '+(mem?trimNum(mem):'');
-  el.style.visibility = (mem!==0) ? 'visible' : 'hidden';
+  el.style.visibility=(mem!==0)?'visible':'hidden';
 }
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderHistory(){
@@ -212,15 +272,17 @@ function renderHistory(){
     list.appendChild(it);
   });
 }
-function openHistory(){renderHistory();document.getElementById('panel').classList.add('open');}
+function openHistory(){closeConvert();renderHistory();document.getElementById('panel').classList.add('open');}
 function closeHistory(){document.getElementById('panel').classList.remove('open');}
-function clearHistory(){history=[];renderHistory();}
+function clearHistory(){history=[];saveHistory();renderHistory();}
 function loadHistory(s){tokens=[{raw:s,disp:s}];justEvaled=true;draw();closeHistory();}
+function saveHistory(){try{localStorage.setItem('calcHistory',JSON.stringify(history));}catch(e){}}
+function loadStoredHistory(){try{const s=localStorage.getItem('calcHistory');if(s)history=JSON.parse(s)||[];}catch(e){}}
 
-/* ---------- repeat-on-equals ---------- */
+/* repeat-on-equals */
 function isBinaryOp(r,i){
   if(r==='*'||r==='/'||r==='%'||r==='**')return true;
-  if(r==='+'||r==='-'){                          // tell apart binary minus from a leading sign
+  if(r==='+'||r==='-'){
     if(i===0)return false;
     const p=tokens[i-1].raw;
     if(p==='('||['*','/','+','-','%','**'].includes(p))return false;
@@ -229,7 +291,6 @@ function isBinaryOp(r,i){
   return false;
 }
 function captureRepeat(){
-  // find the last top-level operator + the operand after it, e.g. "×(3)" in 1×(3)
   let depth=0,opIdx=-1;
   for(let i=0;i<tokens.length;i++){
     const r=tokens[i].raw;
@@ -241,20 +302,20 @@ function captureRepeat(){
     repeatOp={opRaw:tokens[opIdx].raw,opDisp:tokens[opIdx].disp,
       operandTokens:tokens.slice(opIdx+1).map(t=>({raw:t.raw,disp:t.disp}))};
   }else{
-    repeatOp=null;                               // nothing repeatable (e.g. a lone number)
+    repeatOp=null;
   }
 }
 
-/* ---------- evaluate ---------- */
+/* evaluate */
 function evaluate(){
   if(!tokens.length)return;
-  if(justEvaled&&repeatOp){
-    // = pressed again -> repeat the last operation on the current result
+  const isRepeat=justEvaled&&repeatOp;          // = pressed again on a result
+  if(isRepeat){
     const cur={raw:tokens[0].raw,disp:tokens[0].disp};
     tokens=[cur,{raw:repeatOp.opRaw,disp:repeatOp.opDisp},
       ...repeatOp.operandTokens.map(t=>({raw:t.raw,disp:t.disp}))];
   }else{
-    captureRepeat();                             // remember this op for future = presses
+    captureRepeat();
   }
   const exprStr=tokens.map(t=>t.disp).join('');
   const raw=closeParens(tokens.map(t=>t.raw).join(''));
@@ -263,7 +324,7 @@ function evaluate(){
     result=evalRaw(raw);
     if(result===undefined||result===null||Number.isNaN(result))result='Error';
     else if(!isFinite(result))result='∞';
-    else result=Math.round((result+Number.EPSILON)*1e10)/1e10;
+    else result=(Math.abs(result)<1e15)?Math.round((result+Number.EPSILON)*1e10)/1e10:result;
   }catch(e){result='Error';}
   setHist(exprStr+' =');
   if(result==='Error'||result==='∞'){
@@ -274,15 +335,174 @@ function evaluate(){
     document.getElementById('num').textContent=s;
     tokens=[{raw:s,disp:s}];
     justEvaled=true;
-    history.unshift({expr:exprStr,result:s});   // newest first
+    const top=history[0];
+    if(!(top && top.expr===exprStr && top.result===s)){   // skip only exact duplicates
+      history.unshift({expr:exprStr,result:s});
+      if(history.length>200)history.length=200;
+      saveHistory();
+    }
   }
 }
 
-/* ---------- keyboard ---------- */
+/* ---------- unit converter ---------- */
+const CONV={
+  Length:{units:{Meters:1,Kilometers:1000,Centimeters:0.01,Millimeters:0.001,Miles:1609.344,Yards:0.9144,Feet:0.3048,Inches:0.0254}},
+  Weight:{units:{Kilograms:1,Grams:0.001,Milligrams:0.000001,Tonnes:1000,Pounds:0.45359237,Ounces:0.028349523125}},
+  Temp:{temp:true},
+  Area:{units:{'Square Meters':1,'Square Kilometers':1e6,'Square Centimeters':1e-4,Hectares:1e4,Acres:4046.8564224,'Square Feet':0.09290304}},
+  Volume:{units:{Liters:1,Milliliters:0.001,'Cubic Meters':1000,Gallons:3.785411784,Quarts:0.946352946,Cups:0.2365882365,'Fluid Ounces':0.0295735296}},
+  Speed:{units:{'Meters/Second':1,'Kilometers/Hour':0.2777777778,'Miles/Hour':0.44704,Knots:0.5144444444,'Feet/Second':0.3048}},
+  Time:{units:{Seconds:1,Milliseconds:0.001,Minutes:60,Hours:3600,Days:86400,Weeks:604800}},
+  Data:{units:{Bytes:1,Bits:0.125,Kilobytes:1024,Megabytes:1048576,Gigabytes:1073741824,Terabytes:1099511627776}},
+  Currency:{currency:true}
+};
+const CURRENCIES={
+  USD:'US Dollar', INR:'Indian Rupee', EUR:'Euro', GBP:'British Pound', JPY:'Japanese Yen',
+  AUD:'Australian Dollar', CAD:'Canadian Dollar', CHF:'Swiss Franc', CNY:'Chinese Yuan',
+  AED:'UAE Dirham', SGD:'Singapore Dollar', HKD:'Hong Kong Dollar', NZD:'New Zealand Dollar',
+  ZAR:'South African Rand', BRL:'Brazilian Real', RUB:'Russian Ruble', KRW:'South Korean Won',
+  MXN:'Mexican Peso', SAR:'Saudi Riyal', SEK:'Swedish Krona', NOK:'Norwegian Krone',
+  THB:'Thai Baht', MYR:'Malaysian Ringgit', IDR:'Indonesian Rupiah', PHP:'Philippine Peso',
+  TRY:'Turkish Lira', EGP:'Egyptian Pound', PKR:'Pakistani Rupee', BDT:'Bangladeshi Taka', NGN:'Nigerian Naira'
+};
+let rates=null, ratesInfo='', ratesFailed=false;
+async function fetchRates(){
+  if(rates)return true;
+  try{
+    const res=await fetch('https://open.er-api.com/v6/latest/USD');
+    const data=await res.json();
+    if(data&&data.rates){
+      rates=data.rates; ratesFailed=false;
+      ratesInfo=data.time_last_update_utc?('Live rates · '+data.time_last_update_utc.split(' 00:00')[0]):'Live rates';
+      return true;
+    }
+  }catch(e){}
+  ratesFailed=true;
+  return false;
+}
+let convCat='Length';
+function unitList(cat){
+  if(CONV[cat].temp)return ['Celsius','Fahrenheit','Kelvin'];
+  if(CONV[cat].currency)return Object.keys(CURRENCIES);
+  return Object.keys(CONV[cat].units);
+}
+function buildCats(){
+  const wrap=document.getElementById('cats'); wrap.innerHTML='';
+  Object.keys(CONV).forEach((cat,i)=>{
+    const b=document.createElement('button');
+    b.className='cat'+(cat===convCat?' on':'');
+    b.textContent=cat;
+    b.style.background=STOPS[i%STOPS.length];
+    b.onclick=()=>{
+      convCat=cat; buildCats(); buildUnits();
+      if(CONV[cat].currency && !rates && !ratesFailed){
+        document.getElementById('cresult').textContent='Loading live rates…';
+        document.getElementById('cnote').textContent='';
+        fetchRates().then(()=>convert());
+      } else { convert(); }
+    };
+    wrap.appendChild(b);
+  });
+}
+function buildUnits(){
+  const from=document.getElementById('cfrom'), to=document.getElementById('cto');
+  from.innerHTML=''; to.innerHTML='';
+  const cur=CONV[convCat].currency;
+  const units=unitList(convCat);
+  units.forEach(u=>{
+    const label = cur ? (u+' — '+CURRENCIES[u]) : u;
+    from.appendChild(new Option(label,u));
+    to.appendChild(new Option(label,u));
+  });
+  from.selectedIndex=0;
+  to.selectedIndex=units.length>1?1:0;
+}
+function convertTemp(v,from,to){
+  const c = from==='Celsius'?v : from==='Fahrenheit'?(v-32)*5/9 : v-273.15;
+  return to==='Celsius'?c : to==='Fahrenheit'?c*9/5+32 : c+273.15;
+}
+function fmtConv(n){
+  if(!isFinite(n))return '∞';
+  if(n===0)return '0';
+  const a=Math.abs(n);
+  if(a<1e-6||a>=1e12)return Number(n.toPrecision(6)).toExponential();
+  return String(Number(n.toPrecision(10)));
+}
+function convert(){
+  const out=document.getElementById('cresult');
+  const note=document.getElementById('cnote');
+  const val=parseFloat(document.getElementById('cval').value);
+  if(isNaN(val)){out.textContent='—'; note.textContent=''; return;}
+  const from=document.getElementById('cfrom').value, to=document.getElementById('cto').value;
+  let r;
+  if(CONV[convCat].currency){
+    if(!rates){
+      out.textContent = ratesFailed ? 'Rates unavailable' : 'Loading live rates…';
+      note.textContent = ratesFailed ? 'Needs internet — works once hosted online.' : '';
+      return;
+    }
+    const rf=rates[from], rt=rates[to];
+    if(rf==null||rt==null){out.textContent='Rate unavailable'; note.textContent=''; return;}
+    r=val*rt/rf;
+    r=Math.round(r*100)/100;                 // money -> 2 decimals
+    out.textContent=fmtConv(r)+' '+to;
+    note.textContent=ratesInfo;
+    return;
+  }
+  note.textContent='';
+  if(CONV[convCat].temp)r=convertTemp(val,from,to);
+  else{const u=CONV[convCat].units; r=val*u[from]/u[to];}
+  out.textContent=fmtConv(r)+' '+to;
+}
+function swapUnits(){
+  const from=document.getElementById('cfrom'), to=document.getElementById('cto');
+  const t=from.value; from.value=to.value; to.value=t; convert();
+}
+function openConvert(){closeHistory();buildCats();buildUnits();convert();document.getElementById('convpanel').classList.add('open');}
+function closeConvert(){document.getElementById('convpanel').classList.remove('open');}
+
+/* converter history (separate from calculator history) */
+let convHistory=[];
+function saveConv(){
+  const val=parseFloat(document.getElementById('cval').value);
+  if(isNaN(val))return;
+  const entry={expr:trimNum(val)+' '+document.getElementById('cfrom').value,
+               result:document.getElementById('cresult').textContent};
+  const top=convHistory[0];
+  if(top && top.expr===entry.expr && top.result===entry.result)return;  // skip exact duplicate
+  convHistory.unshift(entry);
+  if(convHistory.length>200)convHistory.length=200;
+  saveConvHistory();
+}
+function renderConvHistory(){
+  const list=document.getElementById('convplist'); list.innerHTML='';
+  if(!convHistory.length){list.innerHTML='<div class="empty">No conversions saved yet</div>';return;}
+  convHistory.forEach(h=>{
+    const it=document.createElement('div'); it.className='hitem';
+    it.innerHTML='<div class="he">'+escapeHtml(h.expr)+' =</div><div class="hr">'+escapeHtml(h.result)+'</div>';
+    list.appendChild(it);
+  });
+}
+function openConvHistory(){renderConvHistory();document.getElementById('convhistpanel').classList.add('open');}
+function closeConvHistory(){document.getElementById('convhistpanel').classList.remove('open');}
+function clearConvHistory(){convHistory=[];saveConvHistory();renderConvHistory();}
+function saveConvHistory(){try{localStorage.setItem('convHistory',JSON.stringify(convHistory));}catch(e){}}
+function loadConvHistory(){try{const s=localStorage.getItem('convHistory');if(s)convHistory=JSON.parse(s)||[];}catch(e){}}
+
+/* keyboard */
 document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey)return;
+  if(document.getElementById('convhistpanel').classList.contains('open')){
+    if(e.key==='Escape')closeConvHistory();
+    return;
+  }
+  if(document.getElementById('convpanel').classList.contains('open')){
+    if(e.key==='Escape')closeConvert();
+    return;
+  }
   if(document.getElementById('panel').classList.contains('open')){
     if(e.key==='Escape')closeHistory();
-    return;                       // ignore calc keys while history is open
+    return;
   }
   const k=e.key;
   if(/[0-9.]/.test(k))handle(['t',k,k]);
@@ -298,10 +518,24 @@ document.addEventListener('keydown',e=>{
   else if(k==='Escape')handle('ac');
 });
 
-/* ---------- init ---------- */
+/* prevent zoom: pinch (iOS gestures), multi-touch, ctrl+wheel, ctrl +/- */
+['gesturestart','gesturechange','gestureend'].forEach(ev=>
+  document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
+document.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&['+','-','=','0'].includes(e.key))e.preventDefault();
+},{passive:false});
+
+/* init */
+loadStoredHistory();
+loadConvHistory();
 render();
 draw();
 updateMind();
+document.getElementById('cval').addEventListener('input',convert);
+document.getElementById('cfrom').addEventListener('change',convert);
+document.getElementById('cto').addEventListener('change',convert);
 </script>
 </body>
 </html>
